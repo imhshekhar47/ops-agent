@@ -9,23 +9,20 @@ import (
 	"os"
 
 	"github.com/imhshekhar47/ops-agent/config"
+	"github.com/imhshekhar47/ops-agent/pb"
 	"github.com/imhshekhar47/ops-agent/server"
 	"github.com/imhshekhar47/ops-agent/service"
 	"github.com/imhshekhar47/ops-agent/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	"github.com/imhshekhar47/ops-spec/serde"
 )
 
 var (
-	serializer serde.JsonSerde
-
 	cfgFile string
 
-	argRootLoglevel  string
-	argStartGrpcPort uint16
-	argStartRestPort uint16
+	argStartGrpcPort     uint16
+	argStartRestPort     uint16
+	argStartAdminAddress string
 
 	// configurations
 	agentConfiguration *config.AgentConfiguration
@@ -35,6 +32,9 @@ var (
 
 	// servers
 	agentServer *server.AgentServer
+
+	// clients
+	adminServiceClient pb.OpsAdminServiceClient
 )
 
 var rootCmd = &cobra.Command{
@@ -90,6 +90,8 @@ func loadServerConfig() {
 		hostname = util.GetHostname()
 	}
 
+	uuid := util.NonEmptyOrDefult(os.Getenv("OPS_AGENT_ID"), util.Encode(hostname))
+
 	coreConiguration := config.CoreConfiguration{
 		Version: viper.GetString("core.version"),
 	}
@@ -97,10 +99,10 @@ func loadServerConfig() {
 	agentConfiguration = &config.AgentConfiguration{
 		Core:     coreConiguration,
 		Hostname: hostname,
-		Uuid:     util.Encode(hostname),
+		Uuid:     uuid,
 		Address:  fmt.Sprintf("%s:%d", hostname, argStartGrpcPort),
 	}
 
-	util.Logger.WithField("origin", "cmd::root").Debugln("agent_configuration", agentConfiguration)
+	//util.Logger.WithField("origin", "cmd::root").Debugln("agent_configuration", agentConfiguration)
 	util.Logger.WithField("origin", "cmd::root").Traceln("exit: loadServerConfig()")
 }

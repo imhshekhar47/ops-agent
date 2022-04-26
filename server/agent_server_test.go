@@ -11,15 +11,16 @@ import (
 )
 
 var (
+	id      string                     = "localhost"
 	tConfig *config.AgentConfiguration = &config.AgentConfiguration{
 		Core: config.CoreConfiguration{
-			Version: "0.0.0.0",
+			Version: "0.0.0",
 		},
-		Hostname: "localhost",
-		Uuid:     "localhost",
+		Hostname: id,
+		Uuid:     id,
 	}
 	tService *service.AgentService = service.NewAgentService(tConfig)
-	tLogger  *logrus.Entry         = logrus.New().WithField("origin", "testing")
+	tLogger  *logrus.Logger        = logrus.New()
 	tServer  *AgentServer          = NewAgentServer(tLogger, tService)
 )
 
@@ -29,7 +30,8 @@ func TestGetAgent(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	if agent.Uuid != "localhost" {
-		t.Errorf("could not fetch agent")
+	if agent.Uuid != id {
+		t.Errorf("incorrect response of GetAgent, expected '%s' found '%s'", id, agent.Uuid)
+		t.Fail()
 	}
 }

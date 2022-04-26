@@ -1,9 +1,6 @@
 package util
 
-import (
-	"encoding/base64"
-	"os"
-)
+import "os"
 
 func GetHostname() string {
 	hostname, err := os.Hostname()
@@ -13,8 +10,4 @@ func GetHostname() string {
 	}
 
 	return hostname
-}
-
-func Encode(key string) string {
-	return base64.StdEncoding.EncodeToString([]byte(key))
 }

@@ -8,12 +8,13 @@ import (
 )
 
 var (
+	id         string                     = "localhost"
 	testConfig *config.AgentConfiguration = &config.AgentConfiguration{
 		Core: config.CoreConfiguration{
 			Version: "0.0.0",
 		},
-		Hostname: "localhost",
-		Uuid:     "localhost",
+		Hostname: id,
+		Uuid:     id,
 		Address:  "localhost:5702",
 	}
 
@@ -22,8 +23,8 @@ var (
 
 func TestGet(t *testing.T) {
 
-	if s.Get().Uuid != "localhost" {
-		t.Logf("failed to get agent")
+	if s.Get().Uuid != id {
+		t.Error("failed to get agent")
 		t.Fail()
 	}
 }
@@ -31,7 +32,7 @@ func TestGet(t *testing.T) {
 func TestGetHealth(t *testing.T) {
 
 	if s.GetHealth().GetStatus() != pb.StatusCode_UP {
-		t.Logf("failed to get agent health")
+		t.Error("failed to get agent health")
 		t.Fail()
 	}
 }

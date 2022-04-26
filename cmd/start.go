@@ -5,6 +5,7 @@ Code ownership is with Himanshu Shekhar. Use without modifications.
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"net"
 
@@ -28,17 +29,18 @@ func init() {
 	rootCmd.AddCommand(startCmd)
 	startCmd.Flags().Uint16VarP(&argStartGrpcPort, "grpc-port", "g", 5702, "gRPC api port")
 	startCmd.Flags().Uint16VarP(&argStartRestPort, "rest-port", "r", 8082, "[optional] Rest api port. Specify if you need to expose the agent APIs")
+	startCmd.Flags().StringVarP(&argStartAdminAddress, "admin-address", "a", "", "[optional] Address of admin server")
 }
 
 func runGrpc(
 	listener net.Listener,
-	agentServer *server.AgentServer,
+	aAgentServer *server.AgentServer,
 ) error {
 
 	grpcServer := grpc.NewServer()
 	reflection.Register(grpcServer)
 
-	pb.RegisterOpsAgentServiceServer(grpcServer, agentServer)
+	pb.RegisterOpsAgentServiceServer(grpcServer, aAgentServer)
 	util.Logger.Debugln("Launching grpc on ", listener.Addr())
 	return grpcServer.Serve(listener)
 }
@@ -50,16 +52,34 @@ func runStartCmd(cmd *cobra.Command, args []string) {
 	agentService = service.NewAgentService(agentConfiguration)
 	// servers
 	agentServer = server.NewAgentServer(
-		util.GetLogger("server::AgentServer"),
+		util.Logger,
 		agentService,
 	)
+
+	if len(argStartAdminAddress) > 11 {
+
+		util.Logger.Debugf("Connecting to admin server %s", argStartAdminAddress)
+		adminConn, err := grpc.Dial(argStartAdminAddress, grpc.WithInsecure())
+		if err != nil {
+			panic("Could not connect to admin server")
+		}
+		//defer adminConn.Close()
+
+		ctx := context.Background()
+		adminServiceClient = pb.NewOpsAdminServiceClient(adminConn)
+		adminServiceClient.Register(ctx, agentService.Get())
+	}
 
 	//grpc
 	grpcListner, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", argStartGrpcPort))
 	if err != nil {
-		util.Logger.Errorln("error", err)
+		util.Logger.Errorln("could not create tcp connection", err)
+	} else {
+		err = runGrpc(grpcListner, agentServer)
+		if err != nil {
+			util.Logger.Errorln("could not launch grpc server", err)
+		}
 	}
-	runGrpc(grpcListner, agentServer)
 
 	util.Logger.Traceln("exit: runStartCmd()")
 }

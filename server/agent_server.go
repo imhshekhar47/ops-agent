@@ -19,11 +19,11 @@ type AgentServer struct {
 }
 
 func NewAgentServer(
-	logger *logrus.Entry,
+	logger *logrus.Logger,
 	agentService *service.AgentService,
 ) *AgentServer {
 	return &AgentServer{
-		log:     logger,
+		log:     logger.WithField("origin", "server:AgentServer"),
 		service: agentService,
 	}
 }
@@ -31,13 +31,13 @@ func NewAgentServer(
 func (s *AgentServer) GetAgent(context.Context, *emptypb.Empty) (*pb.Agent, error) {
 	s.log.Traceln("entry: GetAgent()")
 	s.log.Traceln("exit: GetAgent()")
-	defer util.Timer(time.Now(), "server::AgentServer::GetAgent")
+	defer util.Timer(time.Now(), "OpsAgentServer/GetAgent")
 	return s.service.Get(), nil
 }
 
 func (s *AgentServer) GetAgentHealth(context.Context, *emptypb.Empty) (*pb.Health, error) {
 	s.log.Traceln("entry: GetAgentHealth()")
 	s.log.Traceln("exit: GetAgentHealth()")
-	defer util.Timer(time.Now(), "server::AgentServer::GetAgentHealth")
+	defer util.Timer(time.Now(), "OpsAgentServer/GetAgentHealth")
 	return s.service.GetHealth(), nil
 }

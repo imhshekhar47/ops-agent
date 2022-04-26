@@ -7,7 +7,7 @@ import (
 var (
 	testConfig *AgentConfiguration = &AgentConfiguration{
 		Core: CoreConfiguration{
-			Version: "0.0.0.0",
+			Version: "0.0.0",
 		},
 		Hostname: "localhost",
 		Uuid:     "localhost",
@@ -20,7 +20,7 @@ func TestCoreConfig(t *testing.T) {
 		t.Fail()
 	}
 
-	if testConfig.Core.Version != "0.0.0.0" {
+	if testConfig.Core.Version != "0.0.0" {
 		t.Errorf("failed to get test confgration")
 	}
 }
