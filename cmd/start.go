@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var startCmd = &cobra.Command{
@@ -48,10 +49,39 @@ func runGrpc(
 func runStartCmd(cmd *cobra.Command, args []string) {
 	util.Logger.Traceln("entry: runStartCmd()")
 
+	var agent *pb.Agent = &pb.Agent{
+		Meta: &pb.Metadata{
+			Timestamp: timestamppb.Now(),
+			Version:   agentConfiguration.Core.Version,
+		},
+		Uuid:    agentConfiguration.Uuid,
+		Address: agentConfiguration.Address,
+		Status:  pb.StatusCode_UP,
+		Info: &pb.HierarchyInfo{
+			Group:       agentConfiguration.Group,
+			Component:   agentConfiguration.Component,
+			Environment: agentConfiguration.Environment,
+			Site:        agentConfiguration.Site,
+			Location: &pb.GeoLocation{
+				Latitude:  agentConfiguration.Location.Latitude,
+				Longitude: agentConfiguration.Location.Longitude,
+			},
+		},
+		Server: &pb.Server{
+			AgentId:   agentConfiguration.Uuid,
+			Uuid:      agentConfiguration.Uuid,
+			Hostname:  agentConfiguration.Hostname,
+			Status:    pb.StatusCode_UP,
+			Databases: make([]*pb.Database, 0),
+		},
+	}
+
 	// services
-	agentService = service.NewAgentService(agentConfiguration)
+	agentService = service.NewAgentService(agent)
+
 	// servers
 	agentServer = server.NewAgentServer(
+		agentConfiguration,
 		util.Logger,
 		agentService,
 	)
@@ -67,7 +97,14 @@ func runStartCmd(cmd *cobra.Command, args []string) {
 
 		ctx := context.Background()
 		adminServiceClient = pb.NewOpsAdminServiceClient(adminConn)
-		adminServiceClient.Register(ctx, agentService.Get())
+		adminServiceClient.Register(ctx, &pb.Agent{
+			Meta: &pb.Metadata{
+				Timestamp: timestamppb.Now(),
+				Version:   agentConfiguration.Core.Version,
+			},
+			Uuid:    agent.Uuid,
+			Address: agent.Address,
+		})
 	}
 
 	//grpc

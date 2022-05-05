@@ -92,17 +92,23 @@ func loadServerConfig() {
 
 	uuid := util.NonEmptyOrDefult(os.Getenv("OPS_AGENT_ID"), util.Encode(hostname))
 
-	coreConiguration := config.CoreConfiguration{
-		Version: viper.GetString("core.version"),
-	}
-
 	agentConfiguration = &config.AgentConfiguration{
-		Core:     coreConiguration,
-		Hostname: hostname,
-		Uuid:     uuid,
-		Address:  fmt.Sprintf("%s:%d", hostname, argStartGrpcPort),
+		Core: config.CoreConfiguration{
+			Version: viper.GetString("core.version"),
+		},
+		Hostname:    hostname,
+		Uuid:        uuid,
+		Address:     fmt.Sprintf("%s:%d", hostname, argStartGrpcPort),
+		Group:       viper.GetString("server.group"),
+		Component:   viper.GetString("server.component"),
+		Environment: viper.GetString("server.environment"),
+		Site:        viper.GetString("server.site"),
+		Location: config.Location{
+			Latitude:  viper.GetString("server.location.latitude"),
+			Longitude: viper.GetString("server.location.longitude"),
+		},
 	}
 
-	//util.Logger.WithField("origin", "cmd::root").Debugln("agent_configuration", agentConfiguration)
+	util.Logger.WithField("origin", "cmd::root").Debugln("config", agentConfiguration)
 	util.Logger.WithField("origin", "cmd::root").Traceln("exit: loadServerConfig()")
 }
