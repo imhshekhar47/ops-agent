@@ -5,13 +5,13 @@ Code ownership is with Himanshu Shekhar. Use without modifications.
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"net"
 
 	"github.com/imhshekhar47/ops-agent/pb"
 	"github.com/imhshekhar47/ops-agent/server"
 	"github.com/imhshekhar47/ops-agent/service"
+	scheduler "github.com/imhshekhar47/ops-agent/task"
 	"github.com/imhshekhar47/ops-agent/util"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -81,7 +81,6 @@ func runStartCmd(cmd *cobra.Command, args []string) {
 
 	// servers
 	agentServer = server.NewAgentServer(
-		agentConfiguration,
 		util.Logger,
 		agentService,
 	)
@@ -95,17 +94,18 @@ func runStartCmd(cmd *cobra.Command, args []string) {
 		}
 		//defer adminConn.Close()
 
-		ctx := context.Background()
 		adminServiceClient = pb.NewOpsAdminServiceClient(adminConn)
-		adminServiceClient.Register(ctx, &pb.Agent{
-			Meta: &pb.Metadata{
-				Timestamp: timestamppb.Now(),
-				Version:   agentConfiguration.Core.Version,
-			},
-			Uuid:    agent.Uuid,
-			Address: agent.Address,
-		})
+		// add scheduled task to admin server
 	}
+
+	// add scheduled tasks
+
+	if adminServiceClient != nil {
+		agentServer.AddScheduledTask(scheduler.NewPingAdminScheduledTask("0/10 * * * * *", &adminServiceClient, agent, util.Logger))
+	}
+
+	// run all scheduled task
+	agentServer.RunTasks()
 
 	//grpc
 	grpcListner, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", argStartGrpcPort))

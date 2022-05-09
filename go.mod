@@ -13,6 +13,8 @@ require (
 	gotest.tools/gotestsum v1.8.0
 )
 
+require github.com/procyon-projects/chrono v1.1.0 // indirect
+
 require (
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect

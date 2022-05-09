@@ -47,7 +47,7 @@ var (
 
 	tService *service.AgentService = service.NewAgentService(tAgent)
 	tLogger  *logrus.Logger        = logrus.New()
-	tServer  *AgentServer          = NewAgentServer(tConfig, tLogger, tService)
+	tServer  *AgentServer          = NewAgentServer(tLogger, tService)
 )
 
 func TestGetAgent(t *testing.T) {
